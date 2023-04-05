@@ -26,28 +26,28 @@ type Msg struct {
 func RunLengthEncode(msg []string) []string {
 	var ofset int
 	var part int
-	chank := Chunk{m: make(map[int][]string)}
+	chunk := Chunk{m: make(map[int][]string)}
 
 	for i := 0; i < len(msg); i += LEN_CHUNK {
 		limit := ofset + LEN_CHUNK
 		if limit > len(msg) {
 			limit = len(msg)
 		}
-		chank.wg.Add(1)
-		go encode(msg[ofset:limit], part, &chank)
+		chunk.wg.Add(1)
+		go encode(msg[ofset:limit], part, &chunk)
 		part++
 		ofset += LEN_CHUNK
 		limit += LEN_CHUNK
 	}
-	chank.wg.Wait()
+	chunk.wg.Wait()
 	res := make([]string, 0, len(msg))
 	for i := 0; i < part; i++ {
-		res = append(res, chank.m[i]...)
+		res = append(res, chunk.m[i]...)
 	}
 	return res
 }
 
-func encode(msg []string, part int, chank *Chunk) {
+func encode(msg []string, part int, chunk *Chunk) {
 	var firsrElement rune
 	count := 1
 	res := make([]string, len(msg))
@@ -75,16 +75,16 @@ func encode(msg []string, part int, chank *Chunk) {
 		}
 		firsrElement = 0
 	}
-	chank.mu.Lock()
-	defer chank.mu.Unlock()
-	defer chank.wg.Done()
-	chank.m[part] = res
+	chunk.mu.Lock()
+	defer chunk.mu.Unlock()
+	defer chunk.wg.Done()
+	chunk.m[part] = res
 }
 
 func RunLengthDecode(msg []string) []string {
 	var ofset int
 	var part int
-	chank := Chunk{m: make(map[int][]string)}
+	chunk := Chunk{m: make(map[int][]string)}
 
 	for i := 0; i < len(msg); i += LEN_CHUNK {
 		limit := ofset + LEN_CHUNK
@@ -92,21 +92,21 @@ func RunLengthDecode(msg []string) []string {
 			limit = len(msg)
 		}
 
-		chank.wg.Add(1)
-		go decode(msg[ofset:limit], part, &chank)
+		chunk.wg.Add(1)
+		go decode(msg[ofset:limit], part, &chunk)
 		part++
 		ofset += LEN_CHUNK
 		limit += LEN_CHUNK
 	}
-	chank.wg.Wait()
+	chunk.wg.Wait()
 	res := make([]string, 0, len(msg))
 	for i := 0; i < part; i++ {
-		res = append(res, chank.m[i]...)
+		res = append(res, chunk.m[i]...)
 	}
 	return res
 }
 
-func decode(msg []string, part int, chank *Chunk) {
+func decode(msg []string, part int, chunk *Chunk) {
 	var numberStr string
 	var number int
 	var secondElement string
@@ -140,10 +140,10 @@ func decode(msg []string, part int, chank *Chunk) {
 		secondElement = ""
 		numberStr = ""
 	}
-	chank.mu.Lock()
-	defer chank.mu.Unlock()
-	defer chank.wg.Done()
-	chank.m[part] = res
+	chunk.mu.Lock()
+	defer chunk.mu.Unlock()
+	defer chunk.wg.Done()
+	chunk.m[part] = res
 }
 
 func EncodeHandler(c *fiber.Ctx) {

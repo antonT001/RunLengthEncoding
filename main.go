@@ -176,8 +176,40 @@ func main() {
 	fmt.Println(RunLengthDecode(code))
 
 	// web сервер
+
 	app := fiber.New()
 	app.Post("/encode", EncodeHandler)
 	app.Post("/decode", DecodeHandler)
 	log.Fatal(app.Listen(":3000"))
 }
+
+/*
+ПРИМЕРЫ ЗАПРОСОВ
+
+curl --location '127.0.0.1:3000/encode' \
+--header 'Content-Type: application/json' \
+--data '{
+    "data": [
+        "AAAAA",
+        "AAA BBB",
+        "ABC DDD",
+        "     ",
+        "A B C",
+        "ABC"
+    ]
+}'
+
+curl --location '127.0.0.1:3000/decode' \
+--header 'Content-Type: application/json' \
+--data '{
+    "data": [
+        "5A",
+        "3A 3B",
+        "ABC 3D",
+        "5 ",
+        "A B C",
+        "ABC"
+    ]
+}'
+
+*/

@@ -13,11 +13,11 @@ func TestRunLengthEncode(t *testing.T) {
 	result := RunLengthEncode(msg)
 
 	if len(result) != len(ecpected) {
-		t.Error("Incorrect result")
+		t.Error("Incorrect result, lengths is not equal")
 	}
 
-	if !utils.IsCompare(result, ecpected) {
-		t.Error("Incorrect result")
+	if !utils.IsMatch(result, ecpected) {
+		t.Error("Incorrect result, values do not match")
 	}
 }
 
@@ -28,10 +28,10 @@ func TestRunLengthDecode(t *testing.T) {
 	result := RunLengthDecode(msg)
 
 	if len(result) != len(ecpected) {
-		t.Error("Incorrect result")
+		t.Error("Incorrect result, lengths is not equal")
 	}
 
-	if !utils.IsCompare(result, ecpected) {
-		t.Error("Incorrect result")
+	if !utils.IsMatch(result, ecpected) {
+		t.Error("Incorrect result, values do not match")
 	}
 }

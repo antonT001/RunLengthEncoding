@@ -7,7 +7,7 @@ func NotNumber(str string) bool {
 	return err != nil
 }
 
-func IsCompare(arr1, arr2 []string) bool {
+func IsMatch(arr1, arr2 []string) bool {
 	for i := range arr1 {
 		if arr1[i] != arr2[i] {
 			return false

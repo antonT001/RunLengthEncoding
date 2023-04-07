@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/gofiber/fiber"
 	jsoniter "github.com/json-iterator/go"
@@ -27,7 +29,6 @@ func RunLengthEncode(msg []string) []string {
 	var ofset int
 	var part int
 	storage := Storage{m: make(map[int][]string)}
-
 	for i := 0; i < len(msg); i += LEN_CHUNK {
 		limit := ofset + LEN_CHUNK
 		if limit > len(msg) {
@@ -51,29 +52,33 @@ func encode(msg []string, part int, storage *Storage) {
 	var firsrElement rune
 	count := 1
 	res := make([]string, len(msg))
+	sb := strings.Builder{}
 	for i := range msg {
-		word := msg[i]
-		for _, elem := range word {
+		for _, elem := range msg[i] {
 			if firsrElement == 0 {
 				firsrElement = elem
 			} else if elem == firsrElement {
 				count++
 				continue
 			} else if elem != firsrElement && count > 1 {
-				res[i] += strconv.Itoa(count) + string(firsrElement)
+				sb.WriteString(strconv.Itoa(count))
+				sb.WriteRune(firsrElement)
 				count = 1
 			} else if elem != firsrElement && count == 1 {
-				res[i] += string(firsrElement)
+				sb.WriteRune(firsrElement)
 			}
 			firsrElement = elem
 		}
 		if count > 1 {
-			res[i] += strconv.Itoa(count) + string(firsrElement)
+			sb.WriteString(strconv.Itoa(count))
+			sb.WriteRune(firsrElement)
 			count = 1
 		} else {
-			res[i] += string(firsrElement)
+			sb.WriteRune(firsrElement)
 		}
 		firsrElement = 0
+		res[i] = sb.String()
+		sb.Reset()
 	}
 	storage.mu.Lock()
 	defer storage.mu.Unlock()
@@ -111,6 +116,7 @@ func decode(msg []string, part int, storage *Storage) {
 	var number int
 	var secondElement string
 	res := make([]string, len(msg))
+	sb := strings.Builder{}
 	for i := range msg {
 		for _, elem := range msg[i] {
 			if elem >= 48 && elem <= 57 && secondElement == "" {
@@ -119,26 +125,30 @@ func decode(msg []string, part int, storage *Storage) {
 				secondElement = string(elem)
 			} else if elem == 32 || utils.NotNumber(secondElement) && numberStr != "" {
 				number, _ = strconv.Atoi(numberStr) // обработать ошибку
+				sb.Grow(sb.Len() + number + len(secondElement))
 				for j := 0; j < number; j++ {
-					res[i] += secondElement
+					sb.WriteString(secondElement)
 				}
 				if utils.NotNumber(string(elem)) {
-					res[i] += string(elem)
+					sb.WriteRune(elem)
 					numberStr = ""
 				} else {
 					numberStr = string(elem)
 				}
 				secondElement = ""
 			} else {
-				res[i] += string(elem)
+				sb.WriteRune(elem)
 			}
 		}
 		number, _ = strconv.Atoi(numberStr) // обработать ошибку
+		sb.Grow(sb.Len() + number + len(secondElement))
 		for j := 0; j < number; j++ {
-			res[i] += secondElement
+			sb.WriteString(secondElement)
 		}
 		secondElement = ""
 		numberStr = ""
+		res[i] = sb.String()
+		sb.Reset()
 	}
 	storage.mu.Lock()
 	defer storage.mu.Unlock()
@@ -168,12 +178,19 @@ func DecodeHandler(c *fiber.Ctx) {
 // по web-серверу по хорошему нужно добавить валидацию
 // не обрабатывал ошибки
 func main() {
-	// проверка на множестве Мандельброта
-	msg := utils.CreateMandelbrot()
-	fmt.Println(msg)
-	code := RunLengthEncode(msg)
-	fmt.Println(code)
-	fmt.Println(RunLengthDecode(code))
+	var res time.Duration
+	const tests = 10
+	for i := 0; i < tests; i++ {
+		// проверка на множестве Мандельброта
+		msg := utils.CreateMandelbrot()
+		start := time.Now()
+		code := RunLengthEncode(msg)
+		(RunLengthDecode(code))
+		stop := time.Now()
+		res += stop.Sub(start)
+		fmt.Printf("i: %v total: %v\n", i, res)
+	}
+	fmt.Printf("duration: %v\n", res/tests)
 
 	// web сервер
 

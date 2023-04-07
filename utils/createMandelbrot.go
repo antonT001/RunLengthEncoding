@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	mandelbrotScale = 2
+	mandelbrotScale = 20
 )
 
 type (

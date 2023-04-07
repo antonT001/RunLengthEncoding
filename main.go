@@ -27,22 +27,21 @@ type Msg struct {
 
 func RunLengthEncode(msg []string) []string {
 	var ofset int
-	var part int
-	storage := Storage{m: make(map[int][]string)}
-	for i := 0; i < len(msg); i += LEN_CHUNK {
+	parts := utils.GetParts(LEN_CHUNK, len(msg))
+	storage := Storage{m: make(map[int][]string, parts)}
+	for i := 0; i < parts; i ++ {
 		limit := ofset + LEN_CHUNK
 		if limit > len(msg) {
 			limit = len(msg)
 		}
 		storage.wg.Add(1)
-		go encode(msg[ofset:limit], part, &storage)
-		part++
+		go encode(msg[ofset:limit], i, &storage)
 		ofset += LEN_CHUNK
 		limit += LEN_CHUNK
 	}
 	storage.wg.Wait()
 	res := make([]string, 0, len(msg))
-	for i := 0; i < part; i++ {
+	for i := 0; i < parts; i++ {
 		res = append(res, storage.m[i]...)
 	}
 	return res
@@ -88,24 +87,22 @@ func encode(msg []string, part int, storage *Storage) {
 
 func RunLengthDecode(msg []string) []string {
 	var ofset int
-	var part int
-	storage := Storage{m: make(map[int][]string)}
-
-	for i := 0; i < len(msg); i += LEN_CHUNK {
+	parts := utils.GetParts(LEN_CHUNK, len(msg))
+	storage := Storage{m: make(map[int][]string, parts)}
+	for i := 0; i < parts; i ++ {
 		limit := ofset + LEN_CHUNK
 		if limit > len(msg) {
 			limit = len(msg)
 		}
 
 		storage.wg.Add(1)
-		go decode(msg[ofset:limit], part, &storage)
-		part++
+		go decode(msg[ofset:limit], i, &storage)
 		ofset += LEN_CHUNK
 		limit += LEN_CHUNK
 	}
 	storage.wg.Wait()
 	res := make([]string, 0, len(msg))
-	for i := 0; i < part; i++ {
+	for i := 0; i < parts; i++ {
 		res = append(res, storage.m[i]...)
 	}
 	return res

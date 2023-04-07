@@ -15,3 +15,11 @@ func IsMatch(arr1, arr2 []string) bool {
 	}
 	return true
 }
+
+func GetParts (lenChunk, lenMsg int) int {
+	parts := lenMsg/lenChunk
+	if lenMsg%lenChunk != 0 {
+		parts++
+	}
+	return parts
+}

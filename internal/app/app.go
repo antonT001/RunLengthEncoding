@@ -10,8 +10,14 @@ import (
 
 func Run() {
 	app := fiber.New()
+
 	app.Use(recover.New())
-	app.Post("/api/encode", rest.EncodeHandler)
-	app.Post("/api/decode", rest.DecodeHandler)
+
+	apiRoute := app.Route("/api", func(router fiber.Router) {})
+
+	rleRoute := apiRoute.Route("/rle", func(router fiber.Router) {})
+	rleRoute.Post("/encode", rest.NewRleHandler().Encode)
+	rleRoute.Post("/decode", rest.NewRleHandler().Decode)
+
 	log.Fatal(app.Listen(":3000"))
 }

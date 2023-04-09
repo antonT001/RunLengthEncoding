@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/gofiber/fiber v1.14.6
 	github.com/json-iterator/go v1.1.12
+	github.com/magiconair/properties v1.8.7
 )
 
 require (

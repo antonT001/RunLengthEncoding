@@ -2,12 +2,10 @@ package main
 
 import (
 	"RunLengthEncoding/utils"
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/gofiber/fiber"
 	jsoniter "github.com/json-iterator/go"
@@ -29,7 +27,7 @@ func RunLengthEncode(msg []string) []string {
 	var ofset int
 	parts := utils.GetParts(LEN_CHUNK, len(msg))
 	storage := Storage{m: make(map[int][]string, parts)}
-	for i := 0; i < parts; i ++ {
+	for i := 0; i < parts; i++ {
 		limit := ofset + LEN_CHUNK
 		if limit > len(msg) {
 			limit = len(msg)
@@ -72,6 +70,8 @@ func encode(msg []string, part int, storage *Storage) {
 			sb.WriteString(strconv.Itoa(count))
 			sb.WriteRune(firsrElement)
 			count = 1
+		} else if firsrElement == 0 {
+			sb.WriteString("")
 		} else {
 			sb.WriteRune(firsrElement)
 		}
@@ -89,7 +89,7 @@ func RunLengthDecode(msg []string) []string {
 	var ofset int
 	parts := utils.GetParts(LEN_CHUNK, len(msg))
 	storage := Storage{m: make(map[int][]string, parts)}
-	for i := 0; i < parts; i ++ {
+	for i := 0; i < parts; i++ {
 		limit := ofset + LEN_CHUNK
 		if limit > len(msg) {
 			limit = len(msg)
@@ -175,22 +175,6 @@ func DecodeHandler(c *fiber.Ctx) {
 // по web-серверу по хорошему нужно добавить валидацию
 // не обрабатывал ошибки
 func main() {
-	var res time.Duration
-	const tests = 10
-	for i := 0; i < tests; i++ {
-		// проверка на множестве Мандельброта
-		msg := utils.CreateMandelbrot()
-		start := time.Now()
-		code := RunLengthEncode(msg)
-		(RunLengthDecode(code))
-		stop := time.Now()
-		res += stop.Sub(start)
-		fmt.Printf("i: %v total: %v\n", i, res)
-	}
-	fmt.Printf("duration: %v\n", res/tests)
-
-	// web сервер
-
 	app := fiber.New()
 	app.Post("/encode", EncodeHandler)
 	app.Post("/decode", DecodeHandler)

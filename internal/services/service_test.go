@@ -1,7 +1,7 @@
-package main
+package services
 
 import (
-	"RunLengthEncoding/utils"
+	"RunLengthEncoding/internal/utils"
 	"testing"
 
 	"github.com/magiconair/properties/assert"

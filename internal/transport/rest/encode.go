@@ -2,7 +2,6 @@ package rest
 
 import (
 	"RunLengthEncoding/internal/models"
-	"RunLengthEncoding/internal/services"
 	"RunLengthEncoding/internal/utils"
 	"fmt"
 	"net/http"
@@ -11,7 +10,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (r rle) Encode(c *fiber.Ctx) error {
+func (h rleHandler) Encode(c *fiber.Ctx) error {
 	msg := models.Msg{}
 	bodyByte := c.Body()
 	err := jsoniter.Unmarshal(bodyByte, &msg)
@@ -30,7 +29,7 @@ func (r rle) Encode(c *fiber.Ctx) error {
 		}, http.StatusBadRequest)
 	}
 
-	res := services.RunLengthEncode(msg.Data)
+	res := h.rleService.Encode(msg.Data)
 	return utils.HttpResponse(c, models.RleResponse{
 		Success: true,
 		Data:    res,

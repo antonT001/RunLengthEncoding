@@ -1,17 +1,22 @@
 package rest
 
 import (
+	"RunLengthEncoding/internal/services"
+
 	"github.com/gofiber/fiber/v2"
 )
 
-type Rle interface {
+type RleHandler interface {
 	Encode(c *fiber.Ctx) error
 	Decode(c *fiber.Ctx) error
 }
 
-type rle struct {
+type rleHandler struct {
+	rleService services.RleService
 }
 
-func NewRleHandler() Rle {
-	return &rle{}
+func NewRleHandler(rleService services.RleService) *rleHandler {
+	return &rleHandler{
+		rleService: rleService,
+	}
 }

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"RunLengthEncoding/internal/services"
 	"RunLengthEncoding/internal/transport/rest"
 	"log"
 
@@ -9,7 +10,8 @@ import (
 )
 
 func Run() {
-	rleHandler := rest.NewRleHandler()
+	rleService := services.NewRleService()
+	rleHandler := rest.NewRleHandler(rleService)
 
 	app := fiber.New()
 

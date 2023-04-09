@@ -3,20 +3,43 @@ package rest
 import (
 	"RunLengthEncoding/internal/models"
 	"RunLengthEncoding/internal/services"
+	"RunLengthEncoding/internal/utils"
+	"fmt"
+	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	jsoniter "github.com/json-iterator/go"
 )
 
 func (r rle) Encode(c *fiber.Ctx) error {
-	bodyByte := c.Body()
 	msg := models.Msg{}
-	jsoniter.Unmarshal(bodyByte, &msg)
-	res := services.RunLengthEncode(msg.Data)
-	resByte, err := jsoniter.Marshal(res)
+	bodyByte := c.Body()
+	err := jsoniter.Unmarshal(bodyByte, &msg)
 	if err != nil {
-		return err // TODO обернуть
+		return utils.HttpResponse(c, models.OutError{
+			Success: false,
+			Error:   utils.StringPointer("[Encode]: can not unmarshal body: " + err.Error()),
+		}, http.StatusInternalServerError)
 	}
-	c.Write(resByte)
+
+	err = validationEncode(msg)
+	if err != nil {
+		return utils.HttpResponse(c, models.OutError{
+			Success: false,
+			Error:   utils.StringPointer("[Encode]: validation error: " + err.Error()),
+		}, http.StatusBadRequest)
+	}
+
+	res := services.RunLengthEncode(msg.Data)
+	return utils.HttpResponse(c, models.RleResponse{
+		Success: true,
+		Data:    res,
+	}, http.StatusOK)
+}
+
+func validationEncode(msg models.Msg) error {
+	if len(msg.Data) == 0 {
+		return fmt.Errorf("len(msg.Data) == 0")
+	}
 	return nil
 }

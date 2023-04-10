@@ -2,9 +2,9 @@ package services
 
 import (
 	"RunLengthEncoding/internal/utils"
+	"context"
+	"fmt"
 	"sync"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 const (
@@ -18,7 +18,7 @@ type partData struct {
 }
 
 // TODO возвращать и обрабатывать ошибки
-func poolWorkers(c *fiber.Ctx, msg []string, fn func([]string) []string) []string {
+func poolWorkers(ctx context.Context, msg []string, fn func([]string) []string) []string {
 	var ofset int
 
 	parts := utils.GetParts(LEN_CHUNK, len(msg))
@@ -27,7 +27,7 @@ func poolWorkers(c *fiber.Ctx, msg []string, fn func([]string) []string) []strin
 	results := make(chan partData, WORKERS)
 
 	for w := 0; w < WORKERS; w++ {
-		go worker(c, &wg, w, jobs, results, fn)
+		go worker(ctx, &wg, w, jobs, results, fn)
 	}
 
 	for i := 0; i < parts; i++ {
@@ -62,7 +62,7 @@ func poolWorkers(c *fiber.Ctx, msg []string, fn func([]string) []string) []strin
 	return res
 }
 
-func worker(c *fiber.Ctx, wg *sync.WaitGroup, id int, jobs <-chan partData, results chan<- partData, fn func([]string) []string) {
+func worker(ctx context.Context, wg *sync.WaitGroup, id int, jobs <-chan partData, results chan<- partData, fn func([]string) []string) {
 	for {
 		select {
 		case j, ok := <-jobs:
@@ -75,7 +75,9 @@ func worker(c *fiber.Ctx, wg *sync.WaitGroup, id int, jobs <-chan partData, resu
 				msg:  res,
 			}
 			wg.Done()
-		case <-c.Context().Done():
+		case <- ctx.Done():
+			fmt.Println("Done")
+
 			return
 		}
 	}

@@ -3,6 +3,7 @@ package rest
 import (
 	"RunLengthEncoding/internal/models"
 	"RunLengthEncoding/internal/utils"
+	"context"
 	"fmt"
 	"net/http"
 
@@ -11,6 +12,8 @@ import (
 )
 
 func (h rleHandler) Encode(c *fiber.Ctx) error {
+	ctx, cancel := context.WithCancel(c.Context())
+	defer cancel()
 	msg := models.Msg{}
 	bodyByte := c.Body()
 	err := jsoniter.Unmarshal(bodyByte, &msg)
@@ -29,7 +32,7 @@ func (h rleHandler) Encode(c *fiber.Ctx) error {
 		}, http.StatusBadRequest)
 	}
 
-	res := h.rleService.Encode(c, msg.Data) // TODO возвращать и обрабатывать ошибки
+	res := h.rleService.Encode(ctx, msg.Data) // TODO возвращать и обрабатывать ошибки
 	return utils.HttpResponse(c, models.RleResponse{
 		Success: true,
 		Data:    res,

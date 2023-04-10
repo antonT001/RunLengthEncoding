@@ -1,10 +1,12 @@
 package services
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"context"
+)
 
 type RleService interface {
-	Encode(c *fiber.Ctx, msg []string) []string
-	Decode(c *fiber.Ctx, msg []string) []string
+	Encode(ctx context.Context, msg []string) []string
+	Decode(ctx context.Context, msg []string) []string
 }
 
 type rleService struct {
@@ -14,10 +16,10 @@ func NewRleService() *rleService {
 	return &rleService{}
 }
 
-func (s rleService) Encode(c *fiber.Ctx, msg []string) []string { // TODO возвращать и обрабатывать ошибки
-	return poolWorkers(c, msg, runLengthEncode)
+func (s rleService) Encode(ctx context.Context, msg []string) []string { // TODO возвращать и обрабатывать ошибки
+	return poolWorkers(ctx, msg, runLengthEncode)
 }
 
-func (s rleService) Decode(c *fiber.Ctx, msg []string) []string { // TODO возвращать и обрабатывать ошибки
-	return poolWorkers(c, msg, runLengthDecode)
+func (s rleService) Decode(ctx context.Context, msg []string) []string { // TODO возвращать и обрабатывать ошибки
+	return poolWorkers(ctx, msg, runLengthDecode)
 }

@@ -29,7 +29,7 @@ func (h rleHandler) Encode(c *fiber.Ctx) error {
 		}, http.StatusBadRequest)
 	}
 
-	res := h.rleService.Encode(msg.Data)
+	res := h.rleService.Encode(c, msg.Data) // TODO возвращать и обрабатывать ошибки
 	return utils.HttpResponse(c, models.RleResponse{
 		Success: true,
 		Data:    res,

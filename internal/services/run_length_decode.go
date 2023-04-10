@@ -1,36 +1,17 @@
 package services
 
 import (
-	"RunLengthEncoding/internal/models"
 	"RunLengthEncoding/internal/utils"
 	"strconv"
 	"strings"
 )
 
-func RunLengthDecode(msg []string) []string {
-	var ofset int
-	parts := utils.GetParts(LEN_CHUNK, len(msg))
-	storage := models.Storage{M: make(map[int][]string, parts)}
-	for i := 0; i < parts; i++ {
-		limit := ofset + LEN_CHUNK
-		if limit > len(msg) {
-			limit = len(msg)
-		}
-
-		storage.Wg.Add(1)
-		go decode(msg[ofset:limit], i, &storage)
-		ofset += LEN_CHUNK
-		limit += LEN_CHUNK
-	}
-	storage.Wg.Wait()
-	res := make([]string, 0, len(msg))
-	for i := 0; i < parts; i++ {
-		res = append(res, storage.M[i]...)
-	}
-	return res
-}
-
-func decode(msg []string, part int, storage *models.Storage) {
+// TODO
+// возвращать и обрабатывать ошибки
+// вынести контстанты
+// оптимизировать логику
+// пооборачивать в функции
+func runLengthDecode(msg []string) []string {
 	var numberStr string
 	var number int
 	var secondElement string
@@ -69,8 +50,6 @@ func decode(msg []string, part int, storage *models.Storage) {
 		res[i] = sb.String()
 		sb.Reset()
 	}
-	storage.Mu.Lock()
-	defer storage.Mu.Unlock()
-	defer storage.Wg.Done()
-	storage.M[part] = res
+
+	return res
 }

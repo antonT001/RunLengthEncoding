@@ -1,10 +1,10 @@
 package services
 
-const LEN_CHUNK = 3 // TODO вынести в конст или в конфиг
+import "github.com/gofiber/fiber/v2"
 
 type RleService interface {
-	Encode(msg []string) []string
-	Decode(msg []string) []string
+	Encode(c *fiber.Ctx, msg []string) []string
+	Decode(c *fiber.Ctx, msg []string) []string
 }
 
 type rleService struct {
@@ -14,10 +14,10 @@ func NewRleService() *rleService {
 	return &rleService{}
 }
 
-func (s rleService) Decode(msg []string) []string {
-	return RunLengthDecode(msg)
+func (s rleService) Encode(c *fiber.Ctx, msg []string) []string { // TODO возвращать и обрабатывать ошибки
+	return poolWorkers(c, msg, runLengthEncode)
 }
 
-func (s rleService) Encode(msg []string) []string {
-	return RunLengthEncode(msg)
+func (s rleService) Decode(c *fiber.Ctx, msg []string) []string { // TODO возвращать и обрабатывать ошибки
+	return poolWorkers(c, msg, runLengthDecode)
 }

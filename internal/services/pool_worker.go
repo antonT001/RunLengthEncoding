@@ -3,7 +3,6 @@ package services
 import (
 	"RunLengthEncoding/internal/utils"
 	"context"
-	"fmt"
 	"sync"
 )
 
@@ -75,9 +74,7 @@ func worker(ctx context.Context, wg *sync.WaitGroup, id int, jobs <-chan partDat
 				msg:  res,
 			}
 			wg.Done()
-		case <- ctx.Done():
-			fmt.Println("Done")
-
+		case <-ctx.Done():
 			return
 		}
 	}

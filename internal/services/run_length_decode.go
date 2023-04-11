@@ -16,11 +16,12 @@ func runLengthDecode(msg []string) ([]string, error) {
 		)
 
 		for _, elem := range msg[i] {
-			if utils.IsRuneNumber(elem) && secondElement == "" {
+			switch {
+			case utils.IsRuneNumber(elem) && secondElement == "":
 				numberStr += string(elem)
-			} else if secondElement == "" && numberStr != "" {
+			case secondElement == "" && numberStr != "":
 				secondElement = string(elem)
-			} else if utils.NotNumber(secondElement) && numberStr != "" {
+			case utils.NotNumber(secondElement) && numberStr != "":
 				number, err := strconv.Atoi(numberStr)
 				if err != nil {
 					return nil, err
@@ -42,7 +43,7 @@ func runLengthDecode(msg []string) ([]string, error) {
 					numberStr = string(elem)
 				}
 				secondElement = ""
-			} else {
+			default:
 				_, err := sb.WriteRune(elem)
 				if err != nil {
 					return nil, err

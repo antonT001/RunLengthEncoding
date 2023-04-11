@@ -16,6 +16,10 @@ func NotNumber(str string) bool {
 	return err != nil
 }
 
+func IsRuneNumber(r rune) bool {
+	return r >= 48 && r <= 57
+}
+
 func GetParts(lenChunk, lenMsg int) int {
 	parts := lenMsg / lenChunk
 	if lenMsg%lenChunk != 0 {

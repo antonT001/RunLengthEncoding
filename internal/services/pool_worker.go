@@ -17,17 +17,18 @@ type partData struct {
 	msg  []string
 }
 
-func poolWorkers(ctx context.Context, msg []string, fn func([]string) []string) ([]string, error) {
+func poolWorkers(ctx context.Context, msg []string, fn func([]string) ([]string, error)) ([]string, error) {
 	var ofset int
 
 	parts := utils.GetParts(LEN_CHUNK, len(msg))
 	wg := sync.WaitGroup{}
 	jobs := make(chan partData, WORKERS)
 	results := make(chan partData, WORKERS)
+	errorCh := make(chan error)
 
 	for w := 0; w < WORKERS; w++ {
 		wg.Add(1)
-		go worker(ctx, &wg, w, jobs, results, fn)
+		go worker(ctx, &wg, w, jobs, results, errorCh, fn)
 	}
 
 	go func() {
@@ -62,7 +63,9 @@ func poolWorkers(ctx context.Context, msg []string, fn func([]string) []string) 
 	for res := range results {
 		select {
 		case <-ctx.Done():
-			return []string{}, fmt.Errorf("timeout")
+			return nil, fmt.Errorf("timeout")
+		case err := <-errorCh:
+			return nil, err
 		default:
 			storage[res.part] = res.msg
 		}
@@ -75,7 +78,14 @@ func poolWorkers(ctx context.Context, msg []string, fn func([]string) []string) 
 	return res, nil
 }
 
-func worker(ctx context.Context, wg *sync.WaitGroup, id int, jobs <-chan partData, results chan<- partData, fn func([]string) []string) {
+func worker(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	id int,
+	jobs <-chan partData,
+	results chan<- partData,
+	errorCh chan<- error,
+	fn func([]string) ([]string, error)) {
 	defer wg.Done()
 	for {
 		select {
@@ -83,7 +93,11 @@ func worker(ctx context.Context, wg *sync.WaitGroup, id int, jobs <-chan partDat
 			if !ok {
 				return
 			}
-			res := fn(j.msg)
+			res, err := fn(j.msg)
+			if err != nil {
+				errorCh <- err
+				return
+			}
 			results <- partData{
 				part: j.part,
 				msg:  res,

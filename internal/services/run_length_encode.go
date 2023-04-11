@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func runLengthEncode(msg []string) []string {
+func runLengthEncode(msg []string) ([]string, error) {
 	res := make([]string, len(msg))
 	sb := strings.Builder{}
 
@@ -42,5 +42,5 @@ func runLengthEncode(msg []string) []string {
 		sb.Reset()
 	}
 
-	return res
+	return res, nil
 }

@@ -37,7 +37,11 @@ func TestRunLengthEncode(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			result := runLengthEncode(testCase.msg)
+			result, err := runLengthEncode(testCase.msg)
+			if err != nil {
+				t.Error(err)
+				return
+			}
 			assert.Equal(t, result, testCase.expected)
 		})
 	}
@@ -73,7 +77,11 @@ func TestRunLengthDecode(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			result := runLengthDecode(testCase.msg)
+			result, err := runLengthDecode(testCase.msg)
+			if err != nil {
+				t.Error(err)
+				return
+			}
 			assert.Equal(t, result, testCase.expected)
 		})
 	}
@@ -81,9 +89,16 @@ func TestRunLengthDecode(t *testing.T) {
 
 func TestEncodeDecodeMandelbrot(t *testing.T) {
 	msg := utils.CreateMandelbrot()
-	code := runLengthEncode(msg)
-	res := (runLengthDecode(code))
-
+	code, err := runLengthEncode(msg)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	res, err := runLengthDecode(code)
+	if err != nil {
+		t.Error(err)
+		return
+	}
 	assert.Equal(t, res, msg)
 }
 

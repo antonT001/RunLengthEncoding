@@ -3,6 +3,7 @@ package services
 import (
 	"RunLengthEncoding/internal/utils"
 	"context"
+	"fmt"
 	"sync"
 )
 
@@ -16,8 +17,7 @@ type partData struct {
 	msg  []string
 }
 
-// TODO возвращать и обрабатывать ошибки
-func poolWorkers(ctx context.Context, msg []string, fn func([]string) []string) []string {
+func poolWorkers(ctx context.Context, msg []string, fn func([]string) []string) ([]string, error) {
 	var ofset int
 
 	parts := utils.GetParts(LEN_CHUNK, len(msg))
@@ -26,42 +26,57 @@ func poolWorkers(ctx context.Context, msg []string, fn func([]string) []string) 
 	results := make(chan partData, WORKERS)
 
 	for w := 0; w < WORKERS; w++ {
+		wg.Add(1)
 		go worker(ctx, &wg, w, jobs, results, fn)
 	}
 
-	for i := 0; i < parts; i++ {
-		limit := ofset + LEN_CHUNK
-		if limit > len(msg) {
-			limit = len(msg)
-		}
-		wg.Add(1)
-		jobs <- partData{
-			part: i,
-			msg:  msg[ofset:limit],
-		}
-
-		ofset += LEN_CHUNK
-		limit += LEN_CHUNK
-	}
-
-	close(jobs)
 	go func() {
 		wg.Wait()
 		close(results)
 	}()
+
+	go func() {
+		defer close(jobs)
+		for i := 0; i < parts; i++ {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				limit := ofset + LEN_CHUNK
+				if limit > len(msg) {
+					limit = len(msg)
+				}
+
+				jobs <- partData{
+					part: i,
+					msg:  msg[ofset:limit],
+				}
+
+				ofset += LEN_CHUNK
+				limit += LEN_CHUNK
+			}
+		}
+	}()
+
 	storage := make(map[int][]string, parts)
 	for res := range results {
-		storage[res.part] = res.msg
+		select {
+		case <-ctx.Done():
+			return []string{}, fmt.Errorf("timeout")
+		default:
+			storage[res.part] = res.msg
+		}
 	}
 
 	res := make([]string, 0, len(msg))
 	for i := 0; i < parts; i++ {
 		res = append(res, storage[i]...)
 	}
-	return res
+	return res, nil
 }
 
 func worker(ctx context.Context, wg *sync.WaitGroup, id int, jobs <-chan partData, results chan<- partData, fn func([]string) []string) {
+	defer wg.Done()
 	for {
 		select {
 		case j, ok := <-jobs:
@@ -73,7 +88,6 @@ func worker(ctx context.Context, wg *sync.WaitGroup, id int, jobs <-chan partDat
 				part: j.part,
 				msg:  res,
 			}
-			wg.Done()
 		case <-ctx.Done():
 			return
 		}

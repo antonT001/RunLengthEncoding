@@ -51,7 +51,7 @@ func runLengthDecode(msg []string) ([]string, error) {
 		}
 
 		if numberStr != "" {
-			number, err := strconv.Atoi(numberStr) // обработать ошибку
+			number, err := strconv.Atoi(numberStr)
 			if err != nil {
 				return nil, err
 			}

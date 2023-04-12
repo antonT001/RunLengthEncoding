@@ -21,7 +21,7 @@ func runLengthDecode(msg []string) ([]string, error) {
 				numberStr += string(elem)
 			case secondElement == "" && numberStr != "":
 				secondElement = string(elem)
-			case utils.NotNumber(secondElement) && numberStr != "":
+			case utils.IsStringNotNumber(secondElement) && numberStr != "":
 				number, err := strconv.Atoi(numberStr)
 				if err != nil {
 					return nil, err

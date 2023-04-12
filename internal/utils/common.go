@@ -11,7 +11,7 @@ const (
 	SYSTEM_ERROR = "system error: "
 )
 
-func NotNumber(str string) bool {
+func IsStringNotNumber(str string) bool {
 	_, err := strconv.Atoi(str)
 	return err != nil
 }
